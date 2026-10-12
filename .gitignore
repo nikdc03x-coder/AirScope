@@ -1,0 +1,45 @@
+
+cat > .gitignore <<'EOF'
+# AirScope | nik
+# Keep private settings and generated files out of Git.
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Python environments and cache
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Node.js dependencies and build output
+node_modules/
+dist/
+build/
+coverage/
+
+# Local datasets (large files belong outside Git)
+data/raw/
+data/processed/
+
+# Trained models and experiment outputs
+models/*.pkl
+models/*.joblib
+models/*.json
+mlruns/
+mlartifacts/
+
+# Local system and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
+EOF
