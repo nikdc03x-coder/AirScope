@@ -19,6 +19,16 @@
 "footer": {
   "brand": "AirScope — Understand the air. See what comes next.",
   "disclaimer": "Air quality forecasts are estimates, not guarantees."
+},
+
+"cities": {
+  "title": "Explore Cities",
+  "description": "Discover the cities supported by AirScope.",
+  "berlin": "Berlin",
+  "berlinCountry": "Germany",
+  "london": "London",
+  "londonCountry": "United Kingdom",
+  "comingSoon": "Air quality measurements and forecasts will be available here soon."
 }
 
   

@@ -19,6 +19,17 @@
 "footer": {
   "brand": "AirScope — Luftqualität verstehen. Wissen, was kommt.",
   "disclaimer": "Luftqualitätsprognosen sind Schätzungen, keine Garantien."
+},
+
+"cities": {
+  "title": "Städte entdecken",
+  "description": "Entdecken Sie die von AirScope unterstützten Städte.",
+  "berlin": "Berlin",
+  "berlinCountry": "Deutschland",
+  "london": "London",
+  "londonCountry": "Vereinigtes Königreich",
+  "comingSoon": "Luftqualitätsmessungen und Prognosen werden hier bald verfügbar sein."
 }
+
 
 }
