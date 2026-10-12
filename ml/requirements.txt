@@ -1,0 +1,10 @@
+
+# AirScope | nik
+# Libraries used for downloading, cleaning, and validating data.
+
+httpx
+pandas
+numpy
+pyarrow
+python-dotenv
+pytest
