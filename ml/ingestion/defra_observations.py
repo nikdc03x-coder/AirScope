@@ -1,11 +1,13 @@
 
 """
 AirScope | nik
-Retrieve real PM2.5 observations from DEFRA UK-AIR SOS.
+Test time-filtered DEFRA PM2.5 observation requests.
 
-The first request tests a known London observation offering.
+Try London station candidates and save the first response
+containing real observation records.
 """
 
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
@@ -26,59 +28,113 @@ PM25_URI = (
 )
 
 
-def fetch_observations(offering_id):
-    """Request observations for a real DEFRA PM2.5 offering."""
+def local_name(tag):
+    """Remove an XML namespace."""
+    return tag.split("}")[-1]
+
+
+def fetch_observations(client, station, start_time, end_time):
+    """Request PM2.5 observations within a specific UTC period."""
 
     params = {
         "service": "SOS",
         "version": "2.0.0",
         "request": "GetObservation",
-        "offering": offering_id,
+        "offering": station["offering_id"],
         "observedProperty": PM25_URI,
+        "temporalFilter": (
+            "om:phenomenonTime,"
+            f"{start_time}/{end_time}"
+        ),
     }
 
-    print("AirScope | Requesting DEFRA PM2.5 observations")
-    print(f"Offering: {offering_id}")
+    response = client.get(SOS_URL, params=params)
+    response.raise_for_status()
+
+    root = ET.fromstring(response.content)
+
+    if "ExceptionReport" in root.tag:
+        message = " ".join(root.itertext()).strip()
+        return response, root, 0, message
+
+    # Count observation elements, not arbitrary XML elements.
+    count = sum(
+        1
+        for element in root.iter()
+        if local_name(element.tag) in (
+            "OM_Observation",
+            "OM_Measurement",
+        )
+    )
+
+    return response, root, count, ""
+
+
+def main():
+    """Test London PM2.5 candidates with a bounded date range."""
+
+    stations = pd.read_csv(STATIONS_PATH)
+
+    end = datetime.now(timezone.utc)
+    start = end - timedelta(days=7)
+
+    start_time = start.strftime("%Y-%m-%dT%H:%M:%SZ")
+    end_time = end.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    RAW_DIR.mkdir(parents=True, exist_ok=True)
+
+    print("AirScope | DEFRA London PM2.5 observation test")
+    print(f"Period: {start_time} to {end_time}")
+    print(f"Candidates: {len(stations)}")
 
     with httpx.Client(
         timeout=120.0,
         follow_redirects=True,
     ) as client:
-        response = client.get(SOS_URL, params=params)
-        response.raise_for_status()
 
-    RAW_DIR.mkdir(parents=True, exist_ok=True)
+        for _, station in stations.iterrows():
+            name = station["station_name"]
 
-    output_path = RAW_DIR / "defra_london_test_observations.xml"
-    output_path.write_bytes(response.content)
+            print(f"\nTesting: {name}")
 
-    print(f"HTTP status: {response.status_code}")
-    print(f"Response size: {len(response.content):,} bytes")
+            try:
+                response, root, count, error = fetch_observations(
+                    client,
+                    station,
+                    start_time,
+                    end_time,
+                )
+            except (httpx.HTTPError, ET.ParseError) as exc:
+                print(f"Request failed: {exc}")
+                continue
 
-    root = ET.fromstring(response.content)
+            print(f"HTTP status: {response.status_code}")
+            print(f"XML root: {local_name(root.tag)}")
+            print(f"Observation records: {count}")
+            print(f"Response size: {len(response.content):,} bytes")
 
-    print(f"XML root: {root.tag}")
+            if error:
+                print(f"Service exception: {error[:500]}")
+                break
 
-    if "ExceptionReport" in root.tag:
-        print("\nDEFRA service exception:")
-        print(" ".join(root.itertext())[:1500])
-        return
+            if count > 0:
+                output_path = (
+                    RAW_DIR / "defra_london_test_observations.xml"
+                )
 
-    print("\nResponse preview:")
-    print(response.text[:1800])
+                output_path.write_bytes(response.content)
 
-    print(f"\nSaved: {output_path.relative_to(ROOT)}")
+                print("\nReal observations found.")
+                print(f"Saved: {output_path.relative_to(ROOT)}")
+                print("\nResponse preview:")
+                print(response.text[:1500])
+                break
 
-
-def main():
-    stations = pd.read_csv(STATIONS_PATH)
-
-    # Start with one verified geographic candidate.
-    station = stations.iloc[0]
-
-    print(f"Station candidate: {station['station_name']}")
-
-    fetch_observations(station["offering_id"])
+        else:
+            print(
+                "\nNo observations returned for these "
+                "candidates in the selected period."
+            )
 
 
 if __name__ == "__main__":
