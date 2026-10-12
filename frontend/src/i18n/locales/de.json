@@ -14,5 +14,11 @@
   "language": {
     "english": "English",
     "german": "Deutsch"
-  }
+  },
+  
+"footer": {
+  "brand": "AirScope — Luftqualität verstehen. Wissen, was kommt.",
+  "disclaimer": "Luftqualitätsprognosen sind Schätzungen, keine Garantien."
+}
+
 }

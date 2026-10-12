@@ -14,5 +14,12 @@
   "language": {
     "english": "English",
     "german": "Deutsch"
-  }
+  },
+  
+"footer": {
+  "brand": "AirScope — Understand the air. See what comes next.",
+  "disclaimer": "Air quality forecasts are estimates, not guarantees."
+}
+
+  
 }
