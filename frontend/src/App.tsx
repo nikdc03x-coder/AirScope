@@ -1,16 +1,23 @@
 
+import { BrowserRouter, Route, Routes } from "react-router";
+
 import MainLayout from "./components/layout/MainLayout";
 import HomePage from "./pages/HomePage";
 
 // AirScope | nik
-// App connects the shared website layout to the homepage.
-// Later, a router will decide which page to display.
+// React Router decides which page to display based on the URL.
+// MainLayout keeps the same header and footer around every page.
 
 function App() {
   return (
-    <MainLayout>
-      <HomePage />
-    </MainLayout>
+    <BrowserRouter>
+      <MainLayout>
+        <Routes>
+          {/* Show our homepage at the main website address. */}
+          <Route path="/" element={<HomePage />} />
+        </Routes>
+      </MainLayout>
+    </BrowserRouter>
   );
 }
 
