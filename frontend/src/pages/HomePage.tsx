@@ -10,6 +10,7 @@ import {
 
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useTranslation } from "react-i18next";
+import { Link as RouterLink } from "react-router";
 
 // AirScope | nik
 // HomePage contains the content shown on our landing page.
@@ -45,12 +46,16 @@ function HomePage() {
           {t("hero.description")}
         </Typography>
 
-        {/* This button will open the city explorer later. */}
+        {/* AirScope | nik
+            Navigate to the Cities page using React Router.
+            The page changes without a full browser reload.
+        */}
         <Button
+          component={RouterLink}
+          to="/cities"
           variant="contained"
           size="large"
           endIcon={<ArrowForwardIcon />}
-          disabled
         >
           {t("hero.explore")}
         </Button>
