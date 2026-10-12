@@ -14,6 +14,8 @@ from xml.etree import ElementTree as ET
 import pandas as pd
 
 
+# AirScope | nik
+# Define project paths and the official PM2.5 pollutant identifier.
 ROOT = Path(__file__).resolve().parents[2]
 RAW_DIR = ROOT / "data" / "raw"
 PROCESSED_DIR = ROOT / "data" / "processed"
@@ -21,7 +23,10 @@ PROCESSED_DIR = ROOT / "data" / "processed"
 XML_PATH = RAW_DIR / "defra_capabilities.xml"
 OUTPUT_PATH = PROCESSED_DIR / "defra_pm25_registry.csv"
 
-PM25_CODE = "/pollutant/6001"
+PM25_URI = (
+    "http://dd.eionet.europa.eu/"
+    "vocabulary/aq/pollutant/6001"
+)
 
 
 def local_name(tag):
@@ -48,9 +53,11 @@ def extract_values(element, name):
 
 
 def main():
+    """Build a registry containing official DEFRA PM2.5 offerings."""
+
     if not XML_PATH.exists():
         raise FileNotFoundError(
-            "Run the DEFRA source verification first."
+            "DEFRA metadata is missing. Run run_ingestion.py first."
         )
 
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
@@ -60,24 +67,24 @@ def main():
 
     records = []
 
+    # Examine each official observation offering.
     for element in root.iter():
         if local_name(element.tag) != "ObservationOffering":
             continue
 
         properties = extract_values(
-            element, "observableProperty"
+            element,
+            "observableProperty",
         )
 
-        if not any(
-            value.rstrip("/").endswith(PM25_CODE)
-            for value in properties
-        ):
+        # Only accept the exact official PM2.5 pollutant URI.
+        if PM25_URI not in properties:
             continue
 
         identifiers = extract_values(element, "identifier")
         procedures = extract_values(element, "procedure")
 
-        # Geographic references may appear under relatedFeature.
+        # Preserve geographic references if they are available.
         features = extract_values(element, "relatedFeature")
         features += extract_values(element, "featureOfInterest")
 
@@ -92,14 +99,20 @@ def main():
             "source": "DEFRA UK-AIR SOS",
         })
 
+    # Convert the extracted records into a structured dataset.
     df = pd.DataFrame(records)
 
     if df.empty:
         raise RuntimeError("No DEFRA PM2.5 offerings found.")
 
+    # Each observation offering should appear only once.
     df = df.drop_duplicates(subset=["offering_id"])
 
-    df.to_csv(OUTPUT_PATH, index=False, encoding="utf-8")
+    df.to_csv(
+        OUTPUT_PATH,
+        index=False,
+        encoding="utf-8",
+    )
 
     print("AirScope | DEFRA PM2.5 station registry")
     print(f"Offerings: {len(df)}")
@@ -108,7 +121,10 @@ def main():
         df["feature_references"] != "[]"
     ]
 
-    print(f"Offerings with feature references: {len(referenced)}")
+    print(
+        "Offerings with feature references: "
+        f"{len(referenced)}"
+    )
 
     print("\nFirst five records:")
     print(df.head().to_string(index=False))
