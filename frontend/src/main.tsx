@@ -6,6 +6,8 @@ import { CssBaseline, ThemeProvider } from "@mui/material";
 
 import App from "./App";
 import theme from "./app/theme";
+// Initialize translations before the homepage renders.
+import "./i18n";
 
 // AirScope | nik
 // ThemeProvider applies our shared colors and styles

@@ -1,0 +1,18 @@
+
+{
+  "brand": "AirScope",
+  "hero": {
+    "titleLine1": "Verstehen Sie die Luftqualität.",
+    "titleLine2": "Sehen Sie, was als Nächstes kommt.",
+    "description": "Entdecken Sie die Luftqualität in Deutschland und im Vereinigten Königreich. Informieren Sie sich über aktuelle Messwerte und erfahren Sie, wie sich die Luftverschmutzung entwickeln könnte.",
+    "explore": "Städte entdecken"
+  },
+  "forecast": {
+    "title": "Luftqualitätsprognosen",
+    "description": "Bald können Sie aktuelle Schadstoffmessungen erkunden und Prognosen für Berlin und London ansehen."
+  },
+  "language": {
+    "english": "English",
+    "german": "Deutsch"
+  }
+}

@@ -1,0 +1,18 @@
+
+{
+  "brand": "AirScope",
+  "hero": {
+    "titleLine1": "Understand the air.",
+    "titleLine2": "See what comes next.",
+    "description": "Explore air quality in Germany and the United Kingdom. Understand recent measurements and discover how pollution may change.",
+    "explore": "Explore Cities"
+  },
+  "forecast": {
+    "title": "Air Quality Forecasts",
+    "description": "Soon, you will be able to explore recent pollution readings and see forecasts for Berlin and London."
+  },
+  "language": {
+    "english": "English",
+    "german": "Deutsch"
+  }
+}
