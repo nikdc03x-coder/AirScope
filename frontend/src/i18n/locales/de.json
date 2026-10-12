@@ -29,6 +29,11 @@
   "london": "London",
   "londonCountry": "Vereinigtes Königreich",
   "comingSoon": "Luftqualitätsmessungen und Prognosen werden hier bald verfügbar sein."
+},
+
+"navigation": {
+  "home": "Startseite",
+  "cities": "Städte"
 }
 
 
