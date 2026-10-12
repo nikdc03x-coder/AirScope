@@ -11,21 +11,18 @@ import {
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useTranslation } from "react-i18next";
 
-import Header from "./components/layout/Header";
+import MainLayout from "./components/layout/MainLayout";
 
 // AirScope | nik
 // This is the main component of our website.
-// The Header is reusable, and all visible text comes
-// from our English and German translation files.
+// MainLayout automatically adds the header and footer.
+// All visible text comes from our translation files.
 
 function App() {
   const { t } = useTranslation();
 
   return (
-    <>
-      {/* Reusable navigation bar with language switching. */}
-      <Header />
-
+    <MainLayout>
       {/* Main homepage content. */}
       <Container maxWidth="lg">
         <Box sx={{ py: { xs: 6, md: 10 } }}>
@@ -81,7 +78,7 @@ function App() {
           </Card>
         </Box>
       </Container>
-    </>
+    </MainLayout>
   );
 }
 
