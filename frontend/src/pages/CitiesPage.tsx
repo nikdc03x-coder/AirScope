@@ -6,6 +6,8 @@
  * Berlin: historical PM2.5 and experimental ML forecasts.
  * London: official PM2.5 observations and quality information.
  * Comparison: historical PM2.5 trends from both cities.
+ * Evaluation: model performance and scientific limitations.
+ * Transparency: official sources and data reliability.
  */
 
 import { useState } from "react";
@@ -22,12 +24,15 @@ import {
   Typography,
 } from "@mui/material";
 
-// AirScope dashboard components.
+// AirScope | nik
+// Reuse existing components instead of duplicating their logic.
 import BerlinForecastPanel from "../components/BerlinForecastPanel";
 import StationHistoryChart from "../components/StationHistoryChart";
 import CityComparisonChart from "../components/CityComparisonChart";
+import ModelPerformancePanel from "../components/ModelPerformancePanel";
+import DataTransparencyPanel from "../components/DataTransparencyPanel";
 
-// Only the supported AirScope cities can be selected.
+// Only Berlin and London are currently supported.
 type City = "berlin" | "london";
 
 function CitiesPage() {
@@ -35,11 +40,10 @@ function CitiesPage() {
 
   const german = i18n.language.startsWith("de");
 
-  // Berlin is the default because validated forecast models
-  // are currently available only for Berlin.
+  // Berlin is selected initially because it has evaluated ML models.
   const [selectedCity, setSelectedCity] = useState<City>("berlin");
 
-  // English and German dashboard labels.
+  // English and German labels for this page.
   const labels = german
     ? {
         selectCity: "Stadt auswählen",
@@ -55,12 +59,17 @@ function CitiesPage() {
         londonSource: "Datenquelle: DEFRA UK-AIR",
 
         londonForecast:
-          "Für London sind derzeit keine validierten KI-Prognosen verfügbar. Die historischen Messwerte können bereits untersucht werden.",
+          "Für London sind derzeit keine unabhängig validierten KI-Prognosen verfügbar. Die historischen Messwerte können bereits untersucht werden.",
 
         comparisonHeading: "Städtevergleich",
 
         comparisonDescription:
-          "Vergleichen Sie historische PM2,5-Messwerte aus Berlin und London.",
+          "Vergleichen Sie historische PM2,5-Messwerte von Berlin Wedding und London Bloomsbury.",
+
+        evaluationHeading: "Wissenschaftliche Modellbewertung",
+
+        evaluationDescription:
+          "Untersuchen Sie die Genauigkeit der Berliner ML-Prognosen, die Persistenz-Baseline und die Grenzen der Modelle.",
       }
     : {
         selectCity: "Select a city",
@@ -76,12 +85,17 @@ function CitiesPage() {
         londonSource: "Data source: DEFRA UK-AIR",
 
         londonForecast:
-          "Validated AI forecasts are not yet available for London. You can still explore its historical observations.",
+          "Independently validated AI forecasts are not yet available for London. You can still explore its historical observations.",
 
         comparisonHeading: "City Comparison",
 
         comparisonDescription:
-          "Compare historical PM2.5 measurements from Berlin and London.",
+          "Compare historical PM2.5 measurements from Berlin Wedding and London Bloomsbury.",
+
+        evaluationHeading: "Scientific Model Evaluation",
+
+        evaluationDescription:
+          "Explore Berlin ML forecast accuracy, the persistence baseline, and important model limitations.",
       };
 
   return (
@@ -89,7 +103,7 @@ function CitiesPage() {
       <Box sx={{ py: { xs: 5, md: 8 } }}>
         {/* =========================================
             PAGE HEADING
-            Existing translation keys are preserved.
+            Preserve existing translation keys.
            ========================================= */}
 
         <Typography
@@ -126,7 +140,7 @@ function CitiesPage() {
           exclusive
           value={selectedCity}
           onChange={(_event, city: City | null) => {
-            // Prevent the selection from becoming empty.
+            // Prevent the user from deselecting both cities.
             if (city !== null) {
               setSelectedCity(city);
             }
@@ -148,13 +162,12 @@ function CitiesPage() {
 
         {/* =========================================
             BERLIN DASHBOARD
-            Official historical measurements and
-            experimental 6h, 12h, 24h ML forecasts.
+            Historical observations + 6h/12h/24h
+            experimental machine-learning forecasts.
            ========================================= */}
 
         {selectedCity === "berlin" && (
           <Box>
-            {/* Berlin city information */}
             <Card
               variant="outlined"
               sx={{ mb: 3 }}
@@ -162,8 +175,8 @@ function CitiesPage() {
               <CardContent>
                 <Typography
                   variant="h5"
-                  sx={{ fontWeight: 700 }}
                   gutterBottom
+                  sx={{ fontWeight: 700 }}
                 >
                   {t("cities.berlin")}
                 </Typography>
@@ -182,21 +195,20 @@ function CitiesPage() {
               </CardContent>
             </Card>
 
-            {/* Berlin monitoring station selection,
-                ML forecasts and historical chart. */}
+            {/* Berlin station selector, historical chart
+                and experimental ML forecasts. */}
             <BerlinForecastPanel />
           </Box>
         )}
 
         {/* =========================================
             LONDON DASHBOARD
-            Verified DEFRA historical observations.
-            London ML forecasts are not available yet.
+            Official historical observations.
+            No validated London ML forecasts yet.
            ========================================= */}
 
         {selectedCity === "london" && (
           <Box>
-            {/* London city information */}
             <Card
               variant="outlined"
               sx={{ mb: 3 }}
@@ -204,8 +216,8 @@ function CitiesPage() {
               <CardContent>
                 <Typography
                   variant="h5"
-                  sx={{ fontWeight: 700 }}
                   gutterBottom
+                  sx={{ fontWeight: 700 }}
                 >
                   {labels.londonTitle}
                 </Typography>
@@ -232,8 +244,7 @@ function CitiesPage() {
               </CardContent>
             </Card>
 
-            {/* Explain that London forecasts have
-                not yet been independently validated. */}
+            {/* Explain the limitation of London ML coverage. */}
             <Alert
               severity="info"
               sx={{ mb: 3 }}
@@ -241,8 +252,8 @@ function CitiesPage() {
               {labels.londonForecast}
             </Alert>
 
-            {/* London Bloomsbury historical observations.
-                Includes quality-status information. */}
+            {/* London Bloomsbury historical measurements
+                with preserved source-quality information. */}
             <StationHistoryChart
               city="london"
               stationId="CLL2"
@@ -252,10 +263,7 @@ function CitiesPage() {
 
         {/* =========================================
             BERLIN VS LONDON COMPARISON
-            Visible regardless of selected city.
-
-            Uses official historical observations
-            from both cities, aligned by UTC date.
+            Visible for both city selections.
            ========================================= */}
 
         <Box sx={{ mt: { xs: 5, md: 7 } }}>
@@ -263,9 +271,7 @@ function CitiesPage() {
             variant="h4"
             component="h2"
             gutterBottom
-            sx={{
-              fontWeight: 700,
-            }}
+            sx={{ fontWeight: 700 }}
           >
             {labels.comparisonHeading}
           </Typography>
@@ -277,9 +283,48 @@ function CitiesPage() {
             {labels.comparisonDescription}
           </Typography>
 
-          {/* Shared Berlin–London historical comparison.
-              Includes its own 7D/30D range selector. */}
+          {/* Historical daily PM2.5 comparison
+              from two official monitoring stations. */}
           <CityComparisonChart />
+        </Box>
+
+        {/* =========================================
+            PHASE 5 — MODEL PERFORMANCE
+            Berlin test metrics, persistence baseline,
+            station evaluation and limitations.
+           ========================================= */}
+
+        <Box sx={{ mt: { xs: 5, md: 7 } }}>
+          <Typography
+            variant="h4"
+            component="h2"
+            gutterBottom
+            sx={{ fontWeight: 700 }}
+          >
+            {labels.evaluationHeading}
+          </Typography>
+
+          <Typography
+            color="text.secondary"
+            sx={{ mb: 2 }}
+          >
+            {labels.evaluationDescription}
+          </Typography>
+
+          {/* ModelPerformancePanel includes overall metrics.
+              It also includes StationEvaluationChart if
+              that component was added in Phase 5. */}
+          <ModelPerformancePanel />
+        </Box>
+
+        {/* =========================================
+            PHASE 6 — DATA TRANSPARENCY
+            Official sources, historical data notices,
+            model limitations and research disclosures.
+           ========================================= */}
+
+        <Box sx={{ mt: { xs: 5, md: 7 } }}>
+          <DataTransparencyPanel />
         </Box>
       </Box>
     </Container>
