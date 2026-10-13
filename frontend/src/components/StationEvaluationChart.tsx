@@ -3,8 +3,9 @@
  * AirScope | nik
  * Station-level model evaluation visualization.
  *
- * Displays actual test metrics served by FastAPI.
+ * Displays genuine chronological test metrics from FastAPI.
  * Compares ML model MAE against persistence baseline.
+ * Supports mobile scrolling and English/German labels.
  */
 
 import { useEffect, useState } from "react";
@@ -34,8 +35,10 @@ import {
   YAxis,
 } from "recharts";
 
+// Supported forecasting horizons.
 type Horizon = 6 | 12 | 24;
 
+// Station-level metrics returned by FastAPI.
 type StationResult = {
   station_id: string;
   station_name: string;
@@ -49,6 +52,7 @@ type StationResult = {
   model_bias: number;
 };
 
+// Complete evaluation API response.
 type EvaluationResponse = {
   city: string;
   evaluation_partition: string;
@@ -70,6 +74,7 @@ export default function StationEvaluationChart() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Localized labels for the evaluation dashboard.
   const labels = german
     ? {
         title: "Modellgenauigkeit nach Messstation",
@@ -83,10 +88,12 @@ export default function StationEvaluationChart() {
         better: "ML besser als Persistenz",
         equal: "Gleiche Genauigkeit",
         samples: "Testbeispiele",
-        improvement: "MAE-Veränderung",
+        improvement: "MAE-Verbesserung",
+        horizon: "Prognosehorizont",
+        scrollHint:
+          "Auf kleinen Bildschirmen horizontal scrollen, um alle Werte zu sehen.",
         note:
           "Die Fehlerwerte stammen aus dem chronologischen Testsatz. Niedrigere MAE-Werte sind besser. Negative Verbesserungswerte bedeuten, dass Persistenz besser abschneidet.",
-        horizon: "Prognosehorizont",
       }
     : {
         title: "Model Accuracy by Station",
@@ -101,12 +108,14 @@ export default function StationEvaluationChart() {
         equal: "Equal accuracy",
         samples: "Test samples",
         improvement: "MAE improvement",
+        horizon: "Forecast horizon",
+        scrollHint:
+          "On small screens, scroll horizontally to view the full chart.",
         note:
           "These errors come from the chronological test set. Lower MAE is better. Negative improvement means persistence performed better.",
-        horizon: "Forecast horizon",
       };
 
-  // Load evaluation results whenever the horizon changes.
+  // Fetch evaluation data whenever the horizon changes.
   useEffect(() => {
     const controller = new AbortController();
 
@@ -118,21 +127,24 @@ export default function StationEvaluationChart() {
       try {
         const response = await fetch(
           `${API_BASE}/evaluation/berlin/stations?horizon=${horizon}`,
-          { signal: controller.signal }
+          {
+            signal: controller.signal,
+          }
         );
 
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
 
-        const data: EvaluationResponse =
-          await response.json();
+        const data: EvaluationResponse = await response.json();
 
+        // Reject incomplete or unexpected API responses.
         if (
           data.horizon_hours !== horizon ||
           data.station_count !== 12 ||
           data.is_live !== false ||
-          !Array.isArray(data.stations)
+          !Array.isArray(data.stations) ||
+          data.stations.length !== 12
         ) {
           throw new Error("Unexpected evaluation response");
         }
@@ -142,7 +154,9 @@ export default function StationEvaluationChart() {
         if (controller.signal.aborted) return;
 
         setError(
-          err instanceof Error ? err.message : "Unknown error"
+          err instanceof Error
+            ? err.message
+            : "Unknown error"
         );
       } finally {
         if (!controller.signal.aborted) {
@@ -156,7 +170,7 @@ export default function StationEvaluationChart() {
     return () => controller.abort();
   }, [horizon]);
 
-  // Short names keep the chart readable.
+  // Sort stations by ML error so difficult stations appear first.
   const chartData = [...results]
     .sort((a, b) => b.model_mae - a.model_mae)
     .map((item) => ({
@@ -166,15 +180,18 @@ export default function StationEvaluationChart() {
     }));
 
   return (
-    <Card variant="outlined">
+    <Card variant="outlined" sx={{ minWidth: 0 }}>
       <CardContent>
         <Stack spacing={3}>
+          {/* =========================================
+              HEADING
+             ========================================= */}
           <Box>
             <Typography
               variant="h5"
               component="h3"
-              sx={{ fontWeight: 700 }}
               gutterBottom
+              sx={{ fontWeight: 700 }}
             >
               {labels.title}
             </Typography>
@@ -184,29 +201,54 @@ export default function StationEvaluationChart() {
             </Typography>
           </Box>
 
-          {/* Switch evaluation horizons. */}
+          {/* =========================================
+              FORECAST HORIZON SELECTOR
+             ========================================= */}
           <ToggleButtonGroup
             exclusive
             value={horizon}
             size="small"
             aria-label={labels.horizon}
             onChange={(_event, value: Horizon | null) => {
-              if (value !== null) setHorizon(value);
+              if (value !== null) {
+                setHorizon(value);
+              }
+            }}
+            sx={{
+              alignSelf: "flex-start",
+              maxWidth: "100%",
             }}
           >
-            <ToggleButton value={6}>6h</ToggleButton>
-            <ToggleButton value={12}>12h</ToggleButton>
-            <ToggleButton value={24}>24h</ToggleButton>
+            <ToggleButton value={6}>
+              6h
+            </ToggleButton>
+
+            <ToggleButton value={12}>
+              12h
+            </ToggleButton>
+
+            <ToggleButton value={24}>
+              24h
+            </ToggleButton>
           </ToggleButtonGroup>
 
+          {/* =========================================
+              LOADING AND ERROR STATES
+             ========================================= */}
           {loading && (
             <Stack
               direction="row"
               spacing={2}
-              sx={{ alignItems: "center" }}
+              sx={{
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
             >
               <CircularProgress size={24} />
-              <Typography>{labels.loading}</Typography>
+
+              <Typography>
+                {labels.loading}
+              </Typography>
             </Stack>
           )}
 
@@ -216,103 +258,174 @@ export default function StationEvaluationChart() {
             </Alert>
           )}
 
+          {/* =========================================
+              STATION EVALUATION RESULTS
+             ========================================= */}
           {!loading && !error && results.length > 0 && (
             <>
-              {/* Horizontal comparison chart for all 12 stations. */}
-              <Box
+              {/* Explain mobile horizontal scrolling. */}
+              <Typography
+                variant="caption"
+                color="text.secondary"
                 sx={{
-                  width: "100%",
-                  height: 550,
+                  display: {
+                    xs: "block",
+                    md: "none",
+                  },
                 }}
               >
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={chartData}
-                    layout="vertical"
-                    margin={{
-                      top: 5,
-                      right: 25,
-                      bottom: 10,
-                      left: 15,
-                    }}
+                {labels.scrollHint}
+              </Typography>
+
+              {/* =====================================
+                  MOBILE RESPONSIVE CHART
+
+                  Outer Box:
+                  Scroll horizontally on smaller screens.
+
+                  Inner Box:
+                  Preserve enough width for 12 station labels.
+                 ===================================== */}
+              <Box
+                role="region"
+                aria-label={labels.title}
+                tabIndex={0}
+                sx={{
+                  width: "100%",
+                  maxWidth: "100%",
+                  overflowX: "auto",
+                  overflowY: "hidden",
+                  WebkitOverflowScrolling: "touch",
+                  pb: 1,
+                }}
+              >
+                <Box
+                  sx={{
+                    width: "100%",
+                    minWidth: 680,
+                    height: 580,
+                  }}
+                >
+                  <ResponsiveContainer
+                    width="100%"
+                    height="100%"
                   >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                    />
+                    <BarChart
+                      data={chartData}
+                      layout="vertical"
+                      margin={{
+                        top: 10,
+                        right: 25,
+                        bottom: 10,
+                        left: 15,
+                      }}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                      />
 
-                    <XAxis
-                      type="number"
-                      domain={[0, "auto"]}
-                      tickFormatter={(value: number) =>
-                        value.toFixed(1)
-                      }
-                    />
+                      <XAxis
+                        type="number"
+                        domain={[0, "auto"]}
+                        tickFormatter={(value: number) =>
+                          value.toFixed(1)
+                        }
+                      />
 
-                    <YAxis
-                      type="category"
-                      dataKey="station"
-                      width={170}
-                      tick={{ fontSize: 11 }}
-                    />
+                      <YAxis
+                        type="category"
+                        dataKey="station"
+                        width={175}
+                        tick={{
+                          fontSize: 11,
+                        }}
+                      />
 
-                    <Tooltip
-                      formatter={(value, name) => [
-                        `${Number(value).toFixed(3)} µg/m³`,
-                        String(name),
-                      ]}
-                    />
+                      <Tooltip
+                        formatter={(value, name) => [
+                          `${Number(value).toFixed(3)} µg/m³`,
+                          String(name),
+                        ]}
+                      />
 
-                    <Legend />
+                      <Legend />
 
-                    <Bar
-                      name={labels.baseline}
-                      dataKey="baseline"
-                      fill="#427AA1"
-                    />
+                      <Bar
+                        name={labels.baseline}
+                        dataKey="baseline"
+                        fill="#427AA1"
+                      />
 
-                    <Bar
-                      name={labels.model}
-                      dataKey="model"
-                      fill="#F07F23"
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+                      <Bar
+                        name={labels.model}
+                        dataKey="model"
+                        fill="#F07F23"
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </Box>
               </Box>
 
-              {/* Display actual sample counts and improvements. */}
+              {/* =====================================
+                  STATION-LEVEL SUMMARY
+
+                  Each station wraps on smaller screens.
+                  Negative improvement is highlighted.
+                 ===================================== */}
               <Stack spacing={1}>
                 {[...results]
-                  .sort((a, b) => a.station_name.localeCompare(
-                    b.station_name
-                  ))
+                  .sort((a, b) =>
+                    a.station_name.localeCompare(
+                      b.station_name
+                    )
+                  )
                   .map((item) => {
-                    const improvement = item.mae_improvement_pct;
+                    const improvement =
+                      item.mae_improvement_pct;
 
-                    const status =
-                      improvement === null || Math.abs(improvement) < 0.005
-                        ? labels.equal
-                        : improvement < 0
-                          ? labels.worse
-                          : labels.better;
+                    const isEqual =
+                      improvement === null ||
+                      Math.abs(improvement) < 0.005;
+
+                    const isWorse =
+                      improvement !== null &&
+                      improvement < -0.005;
+
+                    const status = isEqual
+                      ? labels.equal
+                      : isWorse
+                        ? labels.worse
+                        : labels.better;
 
                     return (
                       <Box
                         key={item.station_id}
                         sx={{
                           display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          flexWrap: "wrap",
-                          gap: 1,
-                          py: 1,
+                          flexDirection: {
+                            xs: "column",
+                            sm: "row",
+                          },
+                          justifyContent:
+                            "space-between",
+                          alignItems: {
+                            xs: "flex-start",
+                            sm: "center",
+                          },
+                          gap: 1.5,
+                          py: 1.5,
                           borderBottom: "1px solid",
                           borderColor: "divider",
                         }}
                       >
-                        <Box>
+                        {/* Station name and test samples */}
+                        <Box sx={{ minWidth: 0 }}>
                           <Typography
                             variant="body2"
-                            sx={{ fontWeight: 600 }}
+                            sx={{
+                              fontWeight: 600,
+                              overflowWrap: "anywhere",
+                            }}
                           >
                             {item.station_name}
                           </Typography>
@@ -328,29 +441,43 @@ export default function StationEvaluationChart() {
                           </Typography>
                         </Box>
 
+                        {/* Improvement percentage and status */}
                         <Stack
                           direction="row"
                           spacing={1}
-                          sx={{ alignItems: "center" }}
+                          sx={{
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                            rowGap: 1,
+                            maxWidth: "100%",
+                          }}
                         >
                           <Typography variant="body2">
                             {labels.improvement}:{" "}
                             {improvement === null
                               ? "—"
-                              : `${improvement > 0 ? "+" : ""}${improvement.toFixed(2)}%`}
+                              : `${
+                                  improvement > 0 ? "+" : ""
+                                }${improvement.toFixed(2)}%`}
                           </Typography>
 
                           <Chip
                             size="small"
-                            label={status}
                             variant="outlined"
+                            label={status}
                             color={
-                              improvement === null
-                                ? "default"
-                                : improvement < -0.005
-                                  ? "warning"
-                                  : "default"
+                              isWorse
+                                ? "warning"
+                                : "default"
                             }
+                            sx={{
+                              maxWidth: "100%",
+                              height: "auto",
+                              "& .MuiChip-label": {
+                                whiteSpace: "normal",
+                                py: 0.5,
+                              },
+                            }}
                           />
                         </Stack>
                       </Box>
@@ -358,6 +485,7 @@ export default function StationEvaluationChart() {
                   })}
               </Stack>
 
+              {/* Explain the scientific interpretation. */}
               <Alert severity="info">
                 {labels.note}
               </Alert>
