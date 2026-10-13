@@ -32,7 +32,6 @@ CORE_PACKAGES = [
     "pyarrow",
     "scikit-learn",
     "joblib",
-    "requests",
 ]
 
 # Development and API-testing dependencies.

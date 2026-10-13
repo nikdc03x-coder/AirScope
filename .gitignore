@@ -43,3 +43,6 @@ Thumbs.db
 # Logs
 *.log
 EOF
+
+# Local reproducibility test environment
+.venv-clean/

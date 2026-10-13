@@ -1,0 +1,11 @@
+# AirScope | nik
+# Core application, ingestion and ML dependencies.
+# Generated from the active project environment.
+
+fastapi==0.143.0
+uvicorn==0.54.0
+pandas==3.0.6
+numpy==2.5.4
+pyarrow==26.0.0
+scikit-learn==1.9.1
+joblib==1.6.0
