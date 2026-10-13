@@ -309,19 +309,34 @@ The cause of the episode has not been established by the project.
 
 ---
 
-## 10. Application Screenshots
+## 10. ## Application Screenshots
 
-Screenshots will be added after the final visual review.
+The following screenshots show AirScope running locally with
+stored official PM2.5 observations and experimental Berlin forecasts.
 
-Suggested screenshots:
+### Berlin Dashboard
 
-1. Berlin forecast dashboard
-2. Historical PM2.5 chart
-3. Berlin–London comparison
-4. Model evaluation results
-5. Mobile dashboard
+![Berlin dashboard](docs/screenshots/01-berlin-dashboard.png)
 
----
+### Berlin Historical Observations
+
+![Berlin PM2.5 history](docs/screenshots/02-berlin-history.png)
+
+### London Dashboard
+
+![London Bloomsbury observations](docs/screenshots/03-london-dashboard.png)
+
+### Berlin–London Comparison
+
+![Historical station comparison](docs/screenshots/04-city-comparison.png)
+
+### Scientific Model Evaluation
+
+![Berlin model evaluation](docs/screenshots/05-model-evaluation.png)
+
+### Mobile Dashboard
+
+## ![Responsive mobile interface](docs/screenshots/06-mobile-dashboard.png)
 
 ## 11. Local Installation
 
@@ -501,3 +516,5 @@ Environmental observations originate from official data providers:
 - DEFRA UK-AIR (United Kingdom)
 
 The project is an independent research prototype and is not affiliated with or endorsed by either provider.
+
+Application
