@@ -21,6 +21,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.history import router as history_router
 from backend.app.london_history import router as london_history_router
+from backend.app.station_evaluation import (
+    router as station_evaluation_router,
+)
 ROOT = Path(__file__).resolve().parents[2]
 
 DATA_FILE = (
@@ -38,6 +41,8 @@ app = FastAPI(
     description="Historical PM2.5 observations and experimental forecasts.",
     version="0.1.0",
 )
+
+app.include_router(station_evaluation_router)
 # AirScope | nik
 # Allow the local React development server to call FastAPI.
 app.add_middleware(

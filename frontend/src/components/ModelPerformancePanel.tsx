@@ -1,4 +1,6 @@
-cd frontend
+import StationEvaluationChart from "./StationEvaluationChart";
 
-npm run lint
-npm run build
+
+{/* AirScope | nik */}
+{/* Station-level evaluation from saved test results. */}
+<StationEvaluationChart />
