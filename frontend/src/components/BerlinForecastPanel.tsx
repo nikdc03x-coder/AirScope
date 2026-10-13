@@ -10,7 +10,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-
+import DataFreshnessPanel from "./DataFreshnessPanel";
 import {
   Alert,
   Box,
@@ -294,7 +294,14 @@ export default function BerlinForecastPanel() {
             ))}
           </Select>
         </FormControl>
-
+{/* AirScope | nik */}
+{/* Freshness follows the currently selected monitoring station. */}
+{stations.length > 0 && (
+  <DataFreshnessPanel
+    city="berlin"
+    stationId={stationId}
+  />
+)}
         {/* Station and forecast loading indicators */}
         {(stationsLoading || forecastLoading) && (
           <Stack

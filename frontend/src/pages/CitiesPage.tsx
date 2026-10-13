@@ -12,7 +12,7 @@
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-
+import DataFreshnessPanel from "../components/DataFreshnessPanel";
 import {
   Alert,
   Box,
@@ -251,7 +251,13 @@ function CitiesPage() {
             >
               {labels.londonForecast}
             </Alert>
-
+{/* London Bloomsbury data freshness */}
+<Box sx={{ mb: 3 }}>
+  <DataFreshnessPanel
+    city="london"
+    stationId="CLL2"
+  />
+</Box>
             {/* London Bloomsbury historical measurements
                 with preserved source-quality information. */}
             <StationHistoryChart
