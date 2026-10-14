@@ -46,3 +46,6 @@ EOF
 
 # Local reproducibility test environment
 .venv-clean/
+
+# Local dependency backups
+requirements*.txt.backup
